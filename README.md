@@ -2,23 +2,23 @@
 Simple ICO smart contract for TON network
 
 How to create, setup and upload smart contract to TON network:
-## 1. Compile lite-client as described [here](https://test.ton.org/README.txt)
+#### 1. Compile lite-client as described [here](https://test.ton.org/README.txt)
 
 Using *.fif scripts in folder "fift" do follow:
 
-## 2. Create wallet call it owner_wallet.
+#### 2. Create wallet call it owner_wallet.
 
-$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 owner_wallet
+`$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 owner_wallet`
 
-## 3.Create second wallet and call it dest_wallet. 
+#### 3.Create second wallet and call it dest_wallet. 
 
-$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet
+`$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet`
   
 Now we need to setup ICO smart contract. We know owner_wallet and dest_wallet addresses. Also we need find out date start and date end of ICO in unixtimestamp format. You can use this [site](https://www.unixtimestamp.com) to do it.
 For example, we want to sell tokens in 4 stages. Each stage have some amount of tokens by some price.
 
 stage | tokens | price 
------------------------
+------|--------|-------
   1   | 500000 | 1000 
   2   | 500000 | 1500 
   3   | 500000 | 2000 
