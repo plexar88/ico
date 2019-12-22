@@ -91,6 +91,8 @@ Send file current-stage-query.boc via lite-client to buy tokens by current stage
 #### 4. Finalize ICO:
     ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 32 1 -B <this-directory>/fift/finalize_ico.boc <this-directory>/fift/finalize-ico-query
 
+Result:
+
 _Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq-
 Loading private key from file /fift/owner_wallet.pk
