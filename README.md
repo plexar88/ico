@@ -29,14 +29,14 @@ stage | tokens | price
 Next settings: softcup is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, bounty percent - 11,34% of sold tokens.
 Let's setup ICO smart contract. 
 Run in console follow command, replaced directories to your one.
-<build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
+````<build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 1134 500000 1000 500000 1500 500000 2000 500000 2500````
 Pay attention, that stage info is last parameters and going after bounty percent which is multiplied by a hundred (1134).
 This action will show smart contract addresses and will produce .boc file. Send 1 gram to init address of smart contract, then upload .boc file with lite-client (sendfile command).
 
 Now smart contract ready to use.
 You can send bounty stake to some wallet. Smart contract controlled from owner wallet, which you specified when setting up a smart contract. This process is simple sending small amount of grams to smart contract with control message. Unused grams will return back to your wallet. There are two control messages - enroll_bounty and finalize_ico. One more message current_stage may used by users to buy tokens by price current stage only (read pdf documentation). To form a transaction with this messages you need to use the wallet.fif script that you usually use to transfer funds, but attaching a boc file to it with the corresponding command as message body. Files current_stage.boc and finalize_ico.boc contain simple one-byte command. File send-bounty-msg.boc should be created using script send_bounty.fif. This script accept such parameters as destination wallet and bounty stake amount. Messages enroll_bounty and finalize_ico accepted from owner_wallet only.
 
----
+***
 
 ### Command examples:
 #### 1. Setup ICO smart contract
