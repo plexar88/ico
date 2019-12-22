@@ -31,7 +31,7 @@ Next settings: softcup is 3000000000, date start - 1576972800, date end - 157965
 Let's setup ICO smart contract. 
 Run in console follow command, replaced directories to your one.
 
-    <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 1134 500000 1000 500000 1500 500000 2000 500000 2500````
+    <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
 
 Pay attention, that stage info is last parameters and going after bounty percent which is multiplied by a hundred (1134).
 This action will show smart contract addresses and will produce .boc file. Send 1 gram to init address of smart contract, then upload .boc file with lite-client (sendfile command).
