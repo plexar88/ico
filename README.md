@@ -2,7 +2,7 @@
 Simple ICO smart contract for TON network
 
 How to create, setup and upload smart contract to TON network:
-## 1. Compile lite-client as described here - https://test.ton.org/README.txt
+## 1. Compile lite-client as described [here](https://test.ton.org/README.txt)
 
 Using *.fif scripts in folder "fift" do follow:
 
@@ -33,8 +33,8 @@ This action will show smart contract addresses and will produce .boc file. Send 
 Now smart contract ready to use.
 You can send bounty stake to some wallet. Smart contract controlled from owner wallet, which you specified when setting up a smart contract. This process is simple sending small amount of grams to smart contract with control message. Unused grams will return back to your wallet. There are two control messages - enroll_bounty and finalize_ico. One more message current_stage may used by users to buy tokens by price current stage only (read pdf documentation). To form a transaction with this messages you need to use the wallet.fif script that you usually use to transfer funds, but attaching a boc file to it with the corresponding command as message body. Files current_stage.boc and finalize_ico.boc contain simple one-byte command. File send-bounty-msg.boc should be created using script send_bounty.fif. This script accept such parameters as destination wallet and bounty stake amount. Messages enroll_bounty and finalize_ico accepted from owner_wallet only.
 
-Command examples:
-### 1. Setup ICO smart contract
+### Command examples:
+###### 1. Setup ICO smart contract
 ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/setup-smc.fif 0 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq- kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 3000000000 1577021088 1577021988 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
 
 Result:
@@ -46,7 +46,7 @@ Bounceable address (for later access): kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY
 
 Send file ico-query.boc via lite-client to upload smart contract to TON network
 
-### 2. Enroll bounty stake
+###### 2. Enroll bounty stake
 ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/send_bounty.fif kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 12345
 
 Result:
@@ -78,7 +78,7 @@ B5EE9C724101030100CB0001CF88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E878E60
 
 Send file send-bounty-query.boc via lite-client to enroll bounty
 
-### 3. Buy tokens with parameter any_stage = 0:
+###### 3. Buy tokens with parameter any_stage = 0:
 ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/investor_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 5 1 -B <this-directory>/fift/current_stage.boc <this-directory>/fift/current-stage-query
 
 Result:
@@ -98,7 +98,7 @@ B5EE9C724101020100A20001CF88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E878E60
 Send file current-stage-query.boc via lite-client to buy tokens by current stage price only.
 
 
-### 4. Finalize ICO:
+###### 4. Finalize ICO:
 ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 32 1 -B <this-directory>/fift/finalize_ico.boc <this-directory>/fift/finalize-ico-query
 
 Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
