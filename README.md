@@ -8,11 +8,11 @@ Using *.fif scripts in folder "fift" do follow:
 
 #### 2. Create wallet call it owner_wallet.
 
-`$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 owner_wallet`
+```$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 owner_wallet```
 
 #### 3.Create second wallet and call it dest_wallet. 
 
-`$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet`
+```$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet```
   
 Now we need to setup ICO smart contract. We know owner_wallet and dest_wallet addresses. Also we need find out date start and date end of ICO in unixtimestamp format. You can use this [site](https://www.unixtimestamp.com) to do it.
 For example, we want to sell tokens in 4 stages. Each stage have some amount of tokens by some price.
@@ -36,7 +36,7 @@ You can send bounty stake to some wallet. Smart contract controlled from owner w
 
 ### Command examples:
 #### 1. Setup ICO smart contract
-~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/setup-smc.fif 0 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq- kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 3000000000 1577021088 1577021988 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
+    ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/setup-smc.fif 0 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq- kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 3000000000 1577021088 1577021988 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
 
 Result:
 Smart contract address = 0:b18524e82c4c49d68b29047ae0b6aafbf055f0664d29a24f2ae579b163aa2531 
@@ -48,7 +48,7 @@ Bounceable address (for later access): kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY
 Send file ico-query.boc via lite-client to upload smart contract to TON network
 
 #### 2. Enroll bounty stake
-~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/send_bounty.fif kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 12345
+    ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/send_bounty.fif kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 12345
 
 Result:
 Create message body to send 12345 bounty stakes to address kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT
@@ -56,7 +56,7 @@ B5EE9C7241010201002C00010AA100003039010043800DB20D7944CBEEBE0A85FB64F66408640306
 (Saved to file send-bounty-msg.boc)
 Use this filename as body message parameter with script wallet.fif
 
-~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 30 1 -B <this-directory>/fift/send-bounty-msg.boc <this-directory>/fift/send-bounty-query
+    ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 30 1 -B <this-directory>/fift/send-bounty-msg.boc <this-directory>/fift/send-bounty-query
 
 Result:
 Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
@@ -80,7 +80,7 @@ B5EE9C724101030100CB0001CF88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E878E60
 Send file send-bounty-query.boc via lite-client to enroll bounty
 
 #### 3. Buy tokens with parameter any_stage = 0:
-~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/investor_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 5 1 -B <this-directory>/fift/current_stage.boc <this-directory>/fift/current-stage-query
+    ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/investor_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 5 1 -B <this-directory>/fift/current_stage.boc <this-directory>/fift/current-stage-query
 
 Result:
 
@@ -100,7 +100,7 @@ Send file current-stage-query.boc via lite-client to buy tokens by current stage
 
 
 #### 4. Finalize ICO:
-~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 32 1 -B <this-directory>/fift/finalize_ico.boc <this-directory>/fift/finalize-ico-query
+    ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 32 1 -B <this-directory>/fift/finalize_ico.boc <this-directory>/fift/finalize-ico-query
 
 Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq-
