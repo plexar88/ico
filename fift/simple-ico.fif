@@ -1,0 +1,852 @@
+PROGRAM{
+  DECLPROC unpack_flags
+  DECLPROC pack_flags
+  DECLPROC unpack_settings
+  DECLPROC pack_settings
+  DECLPROC unpack_balances
+  DECLPROC pack_balances
+  DECLPROC unpack_state
+  DECLPROC pack_state
+  DECLPROC ~pack_holder
+  DECLPROC ~unpack_holder
+  DECLPROC next_stage
+  DECLPROC update_stage
+  DECLPROC get_current_stage
+  DECLPROC send_grams
+  DECLPROC get_total_bounty_stakes
+  DECLPROC send_tokens
+  DECLPROC finalize_ico
+  DECLPROC do_refund
+  DECLPROC buy_tokens
+  DECLPROC enroll_baunty
+  DECLPROC check_owner
+  DECLPROC recv_internal
+  DECLPROC try_init
+  DECLPROC recv_external
+  81251 DECLMETHOD current_stage
+  98038 DECLMETHOD start_end_date
+  125848 DECLMETHOD can_buy
+  112966 DECLMETHOD balance_of
+  122678 DECLMETHOD bounty_stake
+  108850 DECLMETHOD get_settings
+  118291 DECLMETHOD get_flags
+  unpack_flags PROC:<{
+    CTOS
+    1 LDI
+    1 LDI
+    32 LDU
+    32 LDU
+    1 LDI
+    DROP
+  }>
+  pack_flags PROC:<{
+    NEWC
+    s1 s5 XCHG
+    1 STI
+    s1 s3 XCHG
+    1 STI
+    32 STU
+    32 STU
+    1 STI
+    ENDC
+  }>
+  unpack_settings PROC:<{
+    CTOS
+    LDREF
+    32 LDU
+    LDREF
+    LDREF
+    LDGRAMS
+    LDGRAMS
+    LDVARINT16
+    32 LDU
+    DROP
+  }>
+  pack_settings PROC:<{
+    NEWC
+    s1 s8 XCHG
+    STREF
+    s1 s6 XCHG
+    32 STU
+    s1 s4 XCHG
+    STREF
+    s1 s2 XCHG
+    STREF
+    SWAP
+    STGRAMS
+    SWAP
+    STGRAMS
+    SWAP
+    STVARINT16
+    32 STU
+    ENDC
+  }>
+  unpack_balances PROC:<{
+    CTOS
+    LDDICT
+    LDDICT
+    DROP
+  }>
+  pack_balances PROC:<{
+    NEWC
+    s1 s2 XCHG
+    STDICT
+    STDICT
+    ENDC
+  }>
+  unpack_state PROCREF:<{
+    c4 PUSH
+    CTOS
+    LDREF
+    LDREF
+    LDREF
+    ENDS
+  }>
+  pack_state PROCREF:<{
+    NEWC
+    s1 s3 XCHG
+    STREF
+    STREF
+    STREF
+    ENDC
+    c4 POP
+  }>
+  ~pack_holder PROC:<{
+    NEWC
+    ROT
+    STVARINT16
+    SWAP
+    STGRAMS
+    STREF
+    s0 s2 XCHG
+    8 PUSHPOW2
+    DICTUSETB
+  }>
+  ~unpack_holder PROC:<{
+    LDVARINT16
+    LDGRAMS
+    LDREF
+    3 -ROLL
+  }>
+  next_stage PROC:<{
+    DUP
+    CTOS
+    4 LDU
+    SWAP
+    INC
+    SWAP
+    LDDICT
+    DROP
+    2DUP
+    4 PUSHINT
+    DICTUGET
+    NULLSWAPIFNOT
+    IFNOTJMP:<{
+      3 BLKDROP
+      0 PUSHINT
+      DUP
+    }>
+    s3 POP
+    NEWC
+    s1 s2 XCHG
+    4 STU
+    STDICT
+    ENDC
+    SWAP
+    LDVARINT16
+    LDGRAMS
+    DROP
+  }>
+  update_stage PROC:<{
+    OVER
+    CTOS
+    4 LDU
+    LDDICT
+    DROP
+    2DUP
+    4 PUSHINT
+    DICTUGET
+    NULLSWAPIFNOT
+    IFJMP:<{
+      s4 POP
+      s0 s3 XCHG
+      LDVARINT16
+      NIP
+      LDGRAMS
+      DROP
+      NEWC
+      s0 s3 XCHG2
+      STVARINT16
+      ROT
+      STGRAMS
+      SWAP
+      4 PUSHINT
+      s1 s3 s3 PUXC2
+      DICTUSETB
+      NEWC
+      s1 s2 XCHG
+      4 STU
+      STDICT
+      ENDC
+    }>
+    4 BLKDROP
+  }>
+  get_current_stage PROC:<{
+    CTOS
+    4 LDU
+    LDDICT
+    DROP
+    4 PUSHINT
+    DICTUGET
+    NULLSWAPIFNOT
+    IFNOTJMP:<{
+      DROP
+      0 PUSHINT
+      DUP
+    }>
+    LDVARINT16
+    LDGRAMS
+    DROP
+  }>
+  send_grams PROC:<{
+    0 PUSHINT
+    24 PUSHINT
+    NEWC
+    6 STU
+    s0 s4 XCHG2
+    STSLICER
+    ROT
+    STGRAMS
+    s1 s2 XCHG
+    107 STU
+    ENDC
+    SWAP
+    SENDRAWMSG
+  }>
+  get_total_bounty_stakes PROC:<{
+    -1 PUSHINT
+    0 PUSHINT
+    UNTIL:<{
+      s1 s2 XCPU
+      8 PUSHPOW2
+      DICTUGETNEXT
+      NULLSWAPIFNOT
+      NULLSWAPIFNOT
+      DUP
+      IF:<{
+        s0 s2 XCHG
+        32 LDU
+        DROP
+        s1 s3 XCHG
+        ADD
+      }>ELSE<{
+        2SWAP
+        DROP
+      }>
+      SWAP
+      NOT
+    }>
+    NIP
+    NIP
+  }>
+  send_tokens PROC:<{
+    0 PUSHINT
+    24 PUSHINT
+    NEWC
+    6 STU
+    s0 s4 XCHG2
+    STSLICER
+    s3 PUSH
+    STGRAMS
+    -ROT
+    OVER 0 EQINT IF:<{ 2DROP 0 PUSHINT SWAP 1 STU }>ELSE<{ NEWC ROT STVARUINT32 ENDC CTOS SWAP NEWDICT 32 PUSHINT DICTUSET SWAP STDICT }>
+    106 STU
+    ENDC
+    3 PUSHINT
+    SENDRAWMSG
+  }>
+  finalize_ico PROC:<{
+    unpack_state INLINECALLDICT
+    OVER
+    unpack_settings CALLDICT
+    s5 POP
+    s0 s9 XCHG
+    unpack_flags CALLDICT
+    s0 s3 XCHG
+    44 THROWIF
+    NOW
+    s2 PUSH
+    LESS
+    42 THROWIF
+    s0 s9 XCHG
+    get_current_stage CALLDICT
+    DROP
+    NOW
+    s10 PUSH
+    LESS
+    SWAP
+    0 GTINT
+    AND
+    47 THROWIF
+    NOW
+    s9 PUSH
+    GREATER
+    s4 s5 XCHG2
+    LESS
+    s1 s4 XCHG
+    AND
+    IFJMP:<{
+      DROP
+      s2 POP
+      s2 POP
+      s2 POP
+      s5 POP
+      FALSE
+      s0 s3 XCHG
+      TRUE
+      s3 s3 XCHG2
+      s0 s6 XCHG
+      pack_flags CALLDICT
+      s0 s2 XCHG
+      pack_state INLINECALLDICT
+      0 PUSHINT
+      64 PUSHINT
+      send_grams CALLDICT
+    }>
+    s7 PUSH
+    unpack_balances CALLDICT
+    -1 PUSHINT
+    UNTIL:<{
+      s2 PUSH
+      8 PUSHPOW2
+      DICTUGETNEXT
+      NULLSWAPIFNOT
+      NULLSWAPIFNOT
+      DUP
+      IF:<{
+        s0 s2 XCHG
+        ~unpack_holder CALLDICT
+        NIP
+        CTOS
+        s1 s12 XCPU
+        send_tokens CALLDICT
+        ENDS
+      }>ELSE<{
+        s2 POP
+      }>
+      SWAP
+      NOT
+    }>
+    DROP
+    NIP
+    DUP
+    get_total_bounty_stakes CALLDICT
+    s6 PUSH
+    0 GTINT
+    OVER
+    0 GTINT
+    AND
+    IF:<{
+      100 PUSHINT
+      s1 s12 XCHG
+      8 PUSHINT
+      LSHIFTDIV
+      s0 s6 XCHG2
+      MUL
+      -1 PUSHINT
+      UNTIL:<{
+        s6 PUSH
+        8 PUSHPOW2
+        DICTUGETNEXT
+        NULLSWAPIFNOT
+        NULLSWAPIFNOT
+        DUP
+        IF:<{
+          s0 s2 XCHG
+          32 LDU
+          SWAP
+          100 MULCONST
+          8 LSHIFT#
+          100 PUSHINT
+          s15 s(-1) PUXC
+          8 PUSHINT
+          LSHIFTDIV
+          DIV
+          s4 PUSH
+          100 PUSHINT
+          DIV
+          SWAP
+          MUL
+          8 RSHIFT#
+          10000 PUSHINT
+          DIV
+          SWAP
+          LDREF
+          SWAP
+          CTOS
+          s0 s2 s11 XC2PU
+          send_tokens CALLDICT
+          ENDS
+        }>ELSE<{
+          s2 POP
+        }>
+        SWAP
+        NOT
+      }>
+      2DROP
+      s4 POP
+      s4 POP
+      s7 POP
+    }>ELSE<{
+      s4 s11 XCHG
+      s3 s7 XCHG
+      s2 s6 XCHG
+      5 BLKDROP
+    }>
+    0 PUSHINT
+    s1 s8 XCHG
+    64 PUSHINT
+    send_grams CALLDICT
+    s0 s6 XCHG
+    CTOS
+    0 PUSHINT
+    7 PUSHPOW2
+    send_grams CALLDICT
+    s3 s5 XCHG
+    TRUE
+    s2 s3 XCHG2
+    s0 s5 XCHG
+    pack_flags CALLDICT
+    -ROT
+    pack_state INLINECALLDICT
+  }>
+  do_refund PROC:<{
+    8 PUSHPOW2
+    DICTUDELGET
+    NULLSWAPIFNOT
+    45 THROWIFNOT
+    LDVARINT16
+    NIP
+    LDGRAMS
+    LDREF
+    DROP
+    CTOS
+    SWAP
+    64 PUSHINT
+    send_grams CALLDICT
+  }>
+  buy_tokens PROC:<{
+    unpack_state INLINECALLDICT
+    s2 PUSH
+    unpack_flags CALLDICT
+    NOW
+    s3 PUSH
+    LESS
+    42 THROWIF
+    s6 PUSH
+    unpack_settings CALLDICT
+    18 s() PUSH
+    HASHSU
+    NOW
+    s11 PUSH
+    GREATER
+    s4 s5 PUSH2
+    LESS
+    AND
+    IFJMP:<{
+      s0 s8 XCHG
+      8 BLKDROP
+      s4 POP
+      s8 POP
+      s8 POP
+      s8 POP
+      s0 s2 XCHG
+      unpack_balances CALLDICT
+      s3 s3 XCHG2
+      do_refund CALLDICT
+      ROT
+      pack_balances CALLDICT
+      SWAP
+      IF:<{
+        s2 POP
+        FALSE
+        s0 s3 XCHG
+        TRUE
+        s6 s5 s3 XCHG3
+        s0 s5 XCHG
+        pack_flags CALLDICT
+      }>ELSE<{
+        s3 s5 s4 XCHG3
+        3 BLKDROP
+      }>
+      -ROT
+      pack_state INLINECALLDICT
+    }>
+    s15 POP
+    s0 s12 XCHG
+    41 THROWIFNOT
+    s6 PUSH
+    get_current_stage CALLDICT
+    18 s() PUSH
+    OVER
+    LESS
+    43 THROWIF
+    0 PUSHINT
+    DUP
+    FALSE
+    UNTIL:<{
+      21 s() PUSH
+      s4 PUSH
+      DIV
+      s5 PUSH
+      MIN
+      s5 s5 XCPU
+      SUB
+      s2 s5 XCPU
+      ADD
+      s5 s4 XCPU
+      MUL
+      s0 22 s() XCHG
+      22 s() PUSH
+      SUB
+      s1 s3 XCHG
+      s0 22 s() XCHG
+      ADD
+      s11 s1 XCPU
+      update_stage CALLDICT
+      21 s() PUSH
+      s4 PUSH
+      GREATER
+      21 s() PUSH
+      AND
+      IF:<{
+        NIP
+        s2 POP
+        SWAP
+        next_stage CALLDICT
+        OVER
+        0 EQINT
+        OVER
+        0 EQINT
+        AND
+        IF:<{
+          s3 POP
+          18 s() POP
+          FALSE
+          s14 s13 s12 PUSH3
+          s14 PUSH
+          pack_flags CALLDICT
+          TRUE
+        }>ELSE<{
+          s1 19 s() XCHG
+          s0 s3 XCHG
+        }>
+      }>ELSE<{
+        s2 POP
+        s0 18 s() XCHG
+        TRUE
+      }>
+      s1 19 s() XCHG
+      s11 s4 s0 XCHG3
+      DUP
+    }>
+    DROP
+    s2 POP
+    s2 POP
+    s9 POP
+    s9 POP
+    s9 POP
+    s9 POP
+    s13 POP
+    s0 s9 XCHG
+    unpack_balances CALLDICT
+    NEWC
+    16 s() PUSH
+    STSLICER
+    ENDC
+    s6 PUSH
+    IF:<{
+      s12 s2 PUSH2
+      8 PUSHPOW2
+      DICTUGET
+      NULLSWAPIFNOT
+      IF:<{
+        NIP
+        LDVARINT16
+        s7 s7 XCHG2
+        ADD
+        s0 s6 XCHG
+        LDGRAMS
+        s8 s8 XCHG2
+        ADD
+        s0 s7 XCHG
+        LDREF
+        DROP
+      }>ELSE<{
+        DROP
+      }>
+      s12 s0 s6 XC2PU
+      s8 PUSH
+      ~pack_holder CALLDICT
+      s6 s4 XCHG2
+      ADD
+    }>ELSE<{
+      s1 s12 XCHG
+      s3 s8 XCHG
+      s2 s6 XCHG
+      3 BLKDROP
+    }>
+    s6 s4 XCHG2
+    ADD
+    s1 s7 XCHG
+    s5 s6 XCHG
+    s4 s5 XCHG
+    s1 s4 XCHG
+    s3 s10 XCHG
+    s0 s10 s10 XCHG3
+    pack_settings CALLDICT
+    s3 s3 XCHG2
+    pack_balances CALLDICT
+    s1 s2 XCHG
+    pack_state INLINECALLDICT
+    DUP
+    IF:<{
+      2 PUSHINT
+      send_grams CALLDICT
+    }>ELSE<{
+      2DROP
+    }>
+  }>
+  enroll_baunty PROC:<{
+    unpack_state INLINECALLDICT
+    s2 PUSH
+    unpack_flags CALLDICT
+    s3 s4 XCHG
+    4 BLKDROP
+    44 THROWIF
+    unpack_balances CALLDICT
+    NEWC
+    s6 PUSH
+    STSLICER
+    ENDC
+    s0 s6 XCHG
+    HASHSU
+    s0 s1 PUSH2
+    8 PUSHPOW2
+    DICTUGET
+    NULLSWAPIFNOT
+    IF:<{
+      s7 POP
+      s0 s6 XCHG
+      32 LDU
+      s6 s6 XCHG2
+      ADD
+      s0 s5 XCHG
+      LDREF
+      DROP
+    }>ELSE<{
+      s1 s7 XCHG
+      DROP
+    }>
+    NEWC
+    s1 s6 XCHG
+    32 STU
+    s1 s5 XCHG
+    STREF
+    s0 s5 s4 XCHG3
+    8 PUSHPOW2
+    DICTUSETB
+    s1 s3 XCHG
+    pack_balances CALLDICT
+    pack_state INLINECALLDICT
+  }>
+  check_owner PROC:<{
+    SWAP
+    REWRITESTDADDR
+    s0 s2 XCHG
+    CTOS
+    REWRITESTDADDR
+    s0 s2 XCHG
+    NEQ
+    s0 s2 XCHG
+    NEQ
+    OR
+    44 THROWIF
+  }>
+  recv_internal PROC:<{
+    SWAP
+    CTOS
+    4 LDU
+    SWAP
+    1 PUSHINT
+    AND
+    IFJMP:<{
+      3 BLKDROP
+    }>
+    LDMSGADDR
+    DROP
+    OVER
+    SEMPTY
+    IFJMP:<{
+      NIP
+      SWAP
+      TRUE
+      buy_tokens CALLDICT
+    }>
+    SWAP
+    8 LDU
+    OVER
+    0 EQINT
+    IFJMP:<{
+      2DROP
+      SWAP
+      FALSE
+      buy_tokens CALLDICT
+    }>
+    s3 POP
+    unpack_state INLINECALLDICT
+    DROP
+    NIP
+    unpack_settings CALLDICT
+    s5 s7 XCHG
+    7 BLKDROP
+    OVER
+    161 PUSHINT
+    EQUAL
+    IF:<{
+      s2 s0 PUSH2
+      check_owner CALLDICT
+      s0 s3 XCHG
+      LDREF
+      SWAP
+      CTOS
+      SWAP
+      32 LDU
+      DROP
+      enroll_baunty CALLDICT
+    }>ELSE<{
+      s3 POP
+    }>
+    163 PUSHINT
+    EQUAL
+    IFJMP:<{
+      s0 s1 PUXC
+      check_owner CALLDICT
+      finalize_ico CALLDICT
+    }>
+    NIP
+    0 PUSHINT
+    64 PUSHINT
+    send_grams CALLDICT
+  }>
+  try_init PROCREF:<{
+    unpack_state INLINECALLDICT
+    s0 s2 XCHG
+    unpack_flags CALLDICT
+    37 THROWIF
+    ACCEPT
+    TRUE
+    pack_flags CALLDICT
+    s0 s2 XCHG
+    pack_state INLINECALLDICT
+  }>
+  recv_external PROC:<{
+    SEMPTY
+    IFJMP:<{
+      try_init INLINECALLDICT
+    }>
+  }>
+  current_stage PROC:<{
+    unpack_state INLINECALLDICT
+    DROP
+    NIP
+    unpack_settings CALLDICT
+    7 BLKDROP
+    get_current_stage CALLDICT
+    PAIR
+  }>
+  start_end_date PROC:<{
+    unpack_state INLINECALLDICT
+    2DROP
+    unpack_flags CALLDICT
+    DROP
+    s2 POP
+    s2 POP
+    PAIR
+  }>
+  can_buy PROC:<{
+    unpack_state INLINECALLDICT
+    2DROP
+    unpack_flags CALLDICT
+    4 BLKDROP
+  }>
+  balance_of PROC:<{
+    unpack_state INLINECALLDICT
+    NIP
+    NIP
+    0 PUSHINT
+    s0 s1 PUXC
+    unpack_balances CALLDICT
+    DROP
+    s1 s3 XCHG
+    8 PUSHPOW2
+    DICTUGET
+    NULLSWAPIFNOT
+    IF:<{
+      NIP
+      NIP
+      ~unpack_holder CALLDICT
+      DROP
+      s2 POP
+      SWAP
+    }>ELSE<{
+      DROP
+    }>
+    PAIR
+  }>
+  bounty_stake PROC:<{
+    unpack_state INLINECALLDICT
+    NIP
+    NIP
+    0 PUSHINT
+    SWAP
+    unpack_balances CALLDICT
+    NIP
+    s1 s2 XCHG
+    8 PUSHPOW2
+    DICTUGET
+    NULLSWAPIFNOT
+    IF:<{
+      NIP
+      32 LDU
+      DROP
+    }>ELSE<{
+      DROP
+    }>
+  }>
+  get_settings PROC:<{
+    unpack_state INLINECALLDICT
+    DROP
+    NIP
+    unpack_settings CALLDICT
+    s7 POP
+    s0 s4 XCHG
+    CTOS
+    s0 s3 XCHG
+    CTOS
+    s1 s3 XCHG
+    PAIR
+    s2 s3 XCHG2
+    TRIPLE
+    s0 s1 s3 XCHG3
+    4 TUPLE
+  }>
+  get_flags PROC:<{
+    unpack_state INLINECALLDICT
+    2DROP
+    unpack_flags CALLDICT
+    DROP
+    PAIR
+    TRIPLE
+  }>
+}END>c

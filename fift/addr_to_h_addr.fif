@@ -1,0 +1,15 @@
+#!/usr/bin/fift -s
+"TonUtil.fif" include
+
+{ ."usage: " @' $0 type ." <dest-addr>" cr
+  ."Show address hash to use as parameter in runmethod" cr 1 halt
+} : usage
+
+$# dup 1 < swap 1 > or ' usage if
+
+$1 $>smca drop drop 2constant wallet
+
+<b 4 3 u, wallet -rot 8 u, swap 256 u, b> constant c_wallet
+."runmethod smc_address balance_of "
+c_wallet hash .s cr
+."runmethod smc_address bounty_stake " .s

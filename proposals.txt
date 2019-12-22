@@ -1,0 +1,13 @@
+Func:
+It would be nice to add: 
+- constant support to avoid magic numbers in the code.
+- directive "include" to slightly offload the text of file.
+- simple type redefinition with compiler checking.
+
+
+Misprints:
+tblkch.pdf page 95.
+"The remaining balance is represented by a pair, i.e., a two-component Tuple: the
+first component is the nanogram balance, and the second component is a
+dictionary with 16-bit keys representing all other currencies, if any."
+Should be "32-bit keys representing all other currencies"?

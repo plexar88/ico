@@ -1,0 +1,24 @@
+#!/usr/bin/fift -s
+"TonUtil.fif" include
+
+{ ."usage: " @' $0 type ." <dest-addr> <stake> [<savefile>]" cr
+  ."Creates a request to ICO smart contract to enroll bounty stake <stake> to <dest-addr>"
+  ."and saves it into 'send-bounty-msg.boc'" cr 1 halt
+} : usage
+
+$# dup 2 < swap 3 > or ' usage if
+
+$1 $>smca drop drop 2constant wallet
+$2 =: stake
+
+"send-bounty-msg" =: savefile
+
+<b 4 3 u, wallet -rot 8 u, swap 256 u, b> constant c_wallet
+
+<b 0xA1 8 u, c_wallet ref, stake (number) drop 32 u, b>
+
+."Create message body to send " $2 type ." bounty stakes to address " $1 type cr
+2 boc+>B dup Bx. cr
+savefile +".boc" tuck B>file
+."(Saved to file " type .")" cr
+."Use this filename as body message parameter with script wallet.fif" cr

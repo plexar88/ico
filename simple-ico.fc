@@ -1,0 +1,517 @@
+;; ===========================
+;; Simple ICO smart contract
+;; author : Suprun Vladimir
+;; email  : plexar88@gmail.com
+;; ===========================
+
+;; Add this line "x{FA06} @Defop STVARUINT32" to Asm.fif after line "x{FA03} @Defop STVARINT16"
+
+{- 
+storage structure:
+  state (flags, settings, balances)
+   flags = can_buy, is_finished, date_start, date_end, is_init
+   settings = stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent * 100
+   balances = investors(addr_hash=>[tokens,spend_grams,c_addr]), bounty(addr_hash=>[stakes,c_addr]) 
+-}
+
+builder store_currency(builder b, int amount, int currency_id) asm "OVER 0 EQINT IF:<{ 2DROP 0 PUSHINT SWAP 1 STU }>ELSE<{ NEWC ROT STVARUINT32 ENDC CTOS SWAP NEWDICT 32 PUSHINT DICTUSET SWAP STDICT }>";
+
+builder store_tokens(builder b, int x) asm "STVARINT16";
+(slice, int) load_tokens(slice s) asm( -> 1 0) "LDVARINT16";
+int lshiftdiv(int,int,int) asm "LSHIFTDIV";
+
+
+;; =========================================
+;; return (can_buy, is_finished, date_start, date_end, is_init)
+(int, int, int, int, int) unpack_flags(cell flags){
+;; =========================================
+  var f = flags.begin_parse();
+  return (f~load_int(1),f~load_int(1),f~load_uint(32),f~load_uint(32),f~load_int(1));
+}
+
+;; =========================================
+cell pack_flags(can_buy, is_finished, date_start, date_end, is_init){
+;; =========================================
+  return begin_cell()
+    .store_int(can_buy, 1)
+    .store_int(is_finished, 1)
+    .store_uint(date_start, 32)
+    .store_uint(date_end, 32)
+    .store_int(is_init, 1)
+  .end_cell();
+}
+
+;; =========================================
+;; return (stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent * 100)
+(cell, int, cell, cell, int, int, int, int) unpack_settings(cell sets){
+;; =========================================
+  var s = sets.begin_parse();
+  return (s~load_ref(),s~load_uint(32),s~load_ref(), s~load_ref(), s~load_grams(), s~load_grams(), s~load_tokens(), s~load_uint(32));
+}
+
+;; =========================================
+cell pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent){
+;; =========================================
+  return begin_cell()
+    .store_ref(stages)
+    .store_uint(token_id, 32)
+    .store_ref(owner_addr)
+    .store_ref(dest_wallet)
+    .store_grams(softcup)
+    .store_grams(collected_funds)
+    .store_tokens(tokens_sold)
+    .store_uint(bounty_percent,32) ;; we store baunty percent as percent * 100. So, if we need set bounty percent as 33.33% of sold tokens we need to set 3333 as bounty_percent parameter.
+  .end_cell();
+}
+
+;; =========================================
+;; return (investors, bounty)
+(cell, cell) unpack_balances(cell balances){
+;; =========================================
+  var b = balances.begin_parse();
+  return (b~load_dict(),b~load_dict());
+}
+
+;; =========================================
+cell pack_balances(investors, bounty){
+;; =========================================
+  return begin_cell()
+    .store_dict(investors)
+    .store_dict(bounty)
+  .end_cell();
+}
+
+;; =========================================
+;; state: flags, settings, balances
+(cell, cell, cell) unpack_state() inline_ref {
+;; =========================================
+  var ds = begin_parse(get_data());
+  var res = (ds~load_ref(), ds~load_ref(), ds~load_ref());
+  ds.end_parse();
+  return res;
+}
+
+;; =========================================
+() pack_state(cell flags, cell settings, cell balances) impure inline_ref {
+;; =========================================
+  set_data(begin_cell()
+    .store_ref(flags)
+    .store_ref(settings)
+    .store_ref(balances)
+  .end_cell());
+}
+
+;; =========================================
+_ ~pack_holder(cell holder, int key, cell c_addr, int tokens, int spend_grams){
+;; =========================================
+    holder~udict_set_builder(256, key, begin_cell()
+      .store_tokens(tokens)
+      .store_grams(spend_grams)
+      .store_ref(c_addr));
+    return (holder, ());
+}
+
+;; =========================================
+_ ~unpack_holder(slice sh){
+;; =========================================
+  var tokens = sh~load_tokens();
+  var spend_grams = sh~load_grams();
+  var c_addr = sh~load_ref();
+  return (sh, (tokens, spend_grams, c_addr) );
+}
+
+;; =========================================
+(cell, int, int) next_stage(stages){
+;; =========================================
+  var st = stages.begin_parse();
+  var next_stage = st~load_uint(4) + 1;
+  var dict_stages = st~load_dict();
+  var (stg, found) = dict_stages.udict_get?(4, next_stage);
+  ifnot (found) { return (stages, 0, 0); }; ;; no more stages
+  var new_stages = begin_cell().store_uint(next_stage,4).store_dict(dict_stages).end_cell();
+  return (new_stages, stg~load_tokens(), stg~load_grams()); ;; stage_tokens, token_price
+}
+
+;; =========================================
+cell update_stage(stages, new_amount){
+;; =========================================
+  var st = stages.begin_parse();
+  var stage_id = st~load_uint(4);
+  var dict_stages = st~load_dict();
+  var (stg, found) = dict_stages.udict_get?(4, stage_id);
+  if (found) {
+    var __ = stg~load_tokens();
+    var token_price = stg~load_grams();
+    dict_stages~udict_set_builder(4, stage_id, begin_cell()
+      .store_tokens(new_amount)
+      .store_grams(token_price));
+    var new_stages = begin_cell().store_uint(stage_id,4).store_dict(dict_stages).end_cell();
+    return new_stages; 
+  } else {
+    return stages;
+  }
+}
+
+;; =========================================
+(int, int) get_current_stage(stages){
+;; =========================================
+  var st = stages.begin_parse();
+  var current_stage = st~load_uint(4);
+  var (stg, found) = st~load_dict().udict_get?(4, current_stage);
+  ifnot (found) { return (0,0); };
+  return (stg~load_tokens(), stg~load_grams()); ;; stage_tokens, token_price
+}
+
+;; =========================================
+() send_grams(slice s_addr, int grams, int mode) impure {
+;; =========================================
+  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 011000
+  var msg = begin_cell()
+    .store_uint(0x18, 6)
+    .store_slice(s_addr)
+    .store_grams(grams)
+    .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
+  send_raw_message(msg.end_cell(), mode);
+}
+
+;; =========================================
+int get_total_bounty_stakes(bounty){
+;; =========================================
+  var key = -1;
+  var total_stakes = 0;
+  do {
+  (key, var cs, var f) = bounty.udict_get_next?(256, key);
+    if (f) {
+      total_stakes += cs~load_uint(32);
+    }
+  } until (~ f);
+  return total_stakes;
+}
+
+;; =========================================
+() send_tokens(addr, tokens, token_id) impure {
+;; =========================================
+  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool src:MsgAddress -> 011000
+  var msg = begin_cell()
+    .store_uint(0x18, 6)
+    .store_slice(addr)
+    .store_grams(0)
+    .store_currency(tokens, token_id)
+    .store_uint(0, 4 + 4 + 64 + 32 + 1 + 1)
+    .end_cell();
+  send_raw_message(msg, 3);
+  return ();
+}
+
+;; =========================================
+() finalize_ico(s_addr) impure {
+;; =========================================
+  var (flags, settings, balances) = unpack_state();
+  var (stages, token_id, _, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent) = unpack_settings(settings);
+  var (can_buy, is_finished, date_start, date_end, is_init) = unpack_flags(flags);
+  throw_if (44, is_finished);
+  throw_if (42, now() < date_start);
+  (var tokens, _) = get_current_stage(stages);
+  throw_if (47, (now() < date_end) & (tokens > 0));
+  if (now() > date_end) & (collected_funds < softcup){
+    can_buy = false;
+    is_finished = true;
+    flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
+    pack_state(flags, settings, balances);
+    send_grams(s_addr, 0, 64); ;; return rest of grams
+    return ();
+  }
+  var (investors, bounty) = unpack_balances(balances);
+  var key = -1;
+  do {
+  (key, var cs, var f) = investors.udict_get_next?(256, key);
+    if (f) {
+      var (tokens, spend_grams, c_addr) = cs~unpack_holder();
+      send_tokens(c_addr.begin_parse(), tokens, token_id);
+      cs.end_parse();
+    }
+  } until (~ f);
+
+  ;; calculate bounty stakes. We increase accuracy in intermediate operations, then round at the end
+  var total_stakes = get_total_bounty_stakes(bounty);
+  if ( (bounty_percent > 0) & (total_stakes > 0) ){
+    var total_bounty_tokens_8l00 =  lshiftdiv(tokens_sold, 100, 8) * bounty_percent; ;; total_bounty_tokens = (tokens_sold / 100 * bounty_percent) * 100; With hundredth precision
+    var key = -1;
+    do {
+    (key, var cs, var f) = bounty.udict_get_next?(256, key);
+      if (f) {
+        var stake = cs~load_uint(32);
+        var bounty_percent_00 = ((stake * 100) << 8) / lshiftdiv(total_stakes, 100, 8);
+        var tokens_to_send_l1600 = total_bounty_tokens_8l00 / 100 * bounty_percent_00;
+        var tokens_to_send = (tokens_to_send_l1600 >> 8) / 10000;
+        var c_addr = cs~load_ref();
+        send_tokens(c_addr.begin_parse(), tokens_to_send, token_id);
+        cs.end_parse();
+      }
+    } until (~ f);    
+  }
+
+  send_grams(s_addr,0,64);
+  send_grams(dest_wallet.begin_parse(), 0, 128); ;; ICO successfully finished! Finish oparation - sending all collected funds to destination wallet
+  is_finished = true;
+  flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
+  pack_state(flags, settings, balances);
+}
+
+;; =========================================
+cell do_refund(h_addr, investors) {
+;; =========================================
+  var (inv, found) = investors~udict_delete_get?(256, h_addr);
+  throw_unless(45,found);
+  var __ = inv~load_tokens();
+  var spend_grams = inv~load_grams();
+  var c_addr = inv~load_ref();
+  send_grams(c_addr.begin_parse(), spend_grams, 64);
+  return investors;
+}
+
+;; =========================================
+() buy_tokens(s_addr, msg_value, any_stage) impure {
+;; =========================================
+  var (flags, settings, balances) = unpack_state();
+  var (can_buy, is_finished, date_start, date_end, is_init) = unpack_flags(flags);
+  throw_if(42, now() < date_start);
+  var (stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent) = unpack_settings(settings);
+  var h_addr = s_addr.slice_hash();
+  if ((now() > date_end) & (collected_funds < softcup)){
+    var (investors, bounty) = unpack_balances(balances);
+    investors = do_refund(h_addr, investors);
+    balances = pack_balances(investors, bounty);
+    if (can_buy){
+      can_buy = false;
+      is_finished = true;
+      flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
+    }
+    pack_state(flags, settings, balances);
+    return ();    
+  }
+  throw_unless(41, can_buy);
+  var (stage_tokens, token_price) = get_current_stage(stages);
+  throw_if(43, msg_value < token_price);
+  var spend_grams = 0;
+  var total_spend_grams = 0;
+  var bought_tokens = 0;
+  var tokens_amount = 0;
+  var rest_grams = msg_value;
+  var stage_tokens` = stage_tokens;
+
+  var break = false; 
+  do {                                          ;; buy tokens during stages if need
+    tokens_amount = min(rest_grams / token_price, stage_tokens);
+    stage_tokens -= tokens_amount;
+    bought_tokens += tokens_amount;
+    spend_grams = tokens_amount * token_price;
+    rest_grams -= spend_grams;
+    total_spend_grams += spend_grams;
+    stages = update_stage(stages, stage_tokens);
+    if ((rest_grams > token_price) & any_stage) { ;; if (rest_grams > 1 * token_price & any_stage)
+      (stages, stage_tokens, token_price) = next_stage(stages);
+      stage_tokens` = stage_tokens;
+      if ((stage_tokens == 0) & (token_price == 0)){
+        can_buy = false;
+        flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
+        break = true;
+      }
+    } else {
+      break = true;
+    }
+  } until ( break ); 
+
+  var (investors, bounty) = unpack_balances(balances);
+  var c_addr = begin_cell().store_slice(s_addr).end_cell();
+  if (bought_tokens) {
+    var (inv, found) = investors.udict_get?(256, h_addr);
+    if (found){  ;; investor already bought this tokens before
+      bought_tokens += inv~load_tokens();
+      total_spend_grams += inv~load_grams();
+      c_addr = inv~load_ref();
+    } 
+    investors~pack_holder(h_addr, c_addr, bought_tokens, total_spend_grams);
+    tokens_sold += bought_tokens;
+  }
+  
+  settings = pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected_funds + total_spend_grams, tokens_sold, bounty_percent);
+  balances = pack_balances(investors, bounty);
+  pack_state(flags, settings, balances); 
+  if (rest_grams) {
+    send_grams(s_addr, rest_grams, 2); ;; return rest of grams back to sender
+  }
+  return (); 
+}
+
+;; =========================================
+() enroll_baunty(s_addr, stake) impure {
+;; =========================================
+  var (flags, settings, balances) = unpack_state();
+  var (_, is_finished, _, _, _) = unpack_flags(flags);
+  throw_if (44, is_finished);
+  var (investors, bounty) = unpack_balances(balances);
+  var c_addr = begin_cell().store_slice(s_addr).end_cell();
+  var key = s_addr.slice_hash(); 
+  var (inv, found) = bounty.udict_get?(256, key); ;; s_addr may be different size, therefore we can't use it as key. We will use hash of s_addr.
+  if (found){
+    stake += inv~load_uint(32);
+    c_addr = inv~load_ref();
+  } 
+  bounty~udict_set_builder(256, key, begin_cell()
+      .store_uint(stake,32)
+      .store_ref(c_addr));
+
+  balances = pack_balances(investors, bounty);
+  pack_state(flags, settings, balances);
+  return ();
+}
+
+;; =========================================
+() check_owner(s_addr, cell owner_addr) impure {
+;; =========================================
+    var (src_wc, src_addr) = parse_std_addr(s_addr);
+    var (ow_wc, ow_addr) = parse_std_addr(owner_addr.begin_parse());
+    throw_if(44, (ow_wc != src_wc) | (ow_addr != src_addr) );
+    return ();
+}
+
+
+;; =========================================
+() recv_internal(int msg_value, cell in_msg_cell, slice in_msg) impure {
+;; =========================================
+  var cs = in_msg_cell.begin_parse();
+  var flags = cs~load_uint(4);  ;; int_msg_info$0 ihr_disabled:Bool bounce:Bool bounced:Bool
+  if (flags & 1) {
+    ;; ignore all bounced messages
+    return ();
+  }
+  var s_addr = cs~load_msg_addr();
+  
+  if (in_msg.slice_empty?()) {
+    ;; inbound message has empty body
+    return buy_tokens(s_addr, msg_value, true); ;; if body empty, then param any_stage = true;
+  }
+
+  int op = in_msg~load_uint(8);
+  if (op == 0) {
+    return buy_tokens(s_addr, msg_value, false);
+  }
+
+  var (_, var settings, _) = unpack_state();
+  (_, _, var owner_addr,_,_,_,_,_) = unpack_settings(settings);
+
+  if (op == 0xA1) {
+    check_owner(s_addr, owner_addr);
+    enroll_baunty(in_msg~load_ref().begin_parse(), in_msg~load_uint(32));
+  }
+
+  if (op == 0xA3) {
+    check_owner(s_addr, owner_addr);
+    return finalize_ico(s_addr);
+  }
+
+  send_grams(s_addr, 0, 64); ;; return rest of grams
+  return ();
+}
+
+;; =========================================
+() try_init() impure inline_ref {
+;; =========================================
+  var (flags, settings, balances) = unpack_state();
+  var (can_buy, is_finished, date_start, date_end, is_init) = unpack_flags(flags);
+  throw_if(37, is_init);
+  accept_message();
+  is_init = true;
+  flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
+  pack_state(flags, settings, balances);
+}
+
+;; =========================================
+() recv_external(slice in_msg) impure {
+;; =========================================
+  ;; empty message triggers init
+  if (slice_empty?(in_msg)) {
+    return try_init();
+  }
+}
+
+;; get methods
+
+;; -----------------------------------------
+;; return current stage (available_tokens, token_price)
+tuple current_stage() method_id {
+;; -----------------------------------------
+  (_, var settings, _) = unpack_state();
+  (var stages,_,_,_,_,_,_,_) = unpack_settings(settings);
+  var (stage_tokens, token_price) = get_current_stage(stages);
+  return pair(stage_tokens, token_price);
+}
+
+;; -----------------------------------------
+;; return ico start and end dates in unixtime
+tuple start_end_date() method_id {
+;; -----------------------------------------
+  (var flags, _, _) = unpack_state();
+  (_, _, var date_start, var date_end, _) = unpack_flags(flags);
+  return pair(date_start, date_end);
+}
+
+;; -----------------------------------------
+;; Can I buy tokens?
+int can_buy() method_id {
+;; -----------------------------------------
+  (var flags, _, _) = unpack_state();
+  (var can_buy, _, _, _, _) = unpack_flags(flags);
+  return can_buy;
+}
+
+;; -----------------------------------------
+;; return balance in tokens (tokens will be transferred to the user's wallet later, after the completion of the ICO if softcup is reached)
+tuple balance_of(int h_addr) method_id {
+  (_, _, var balances) = unpack_state();
+;; -----------------------------------------
+  var tokens = 0;
+  var spend_grams = 0;
+  var (investors, _) = unpack_balances(balances);
+
+  var (inv, found) = investors.udict_get?(256, h_addr);
+  if (found){
+    (var tokens`, var spend_grams`,_) = inv~unpack_holder();
+    tokens += tokens`;
+    spend_grams += spend_grams`;
+  }
+  return pair(tokens,spend_grams);
+}
+
+;; -----------------------------------------
+;; return bounty stake (tokens will be transferred to user's wallet later, after ICO end, when we will know total amount of sold tokens)
+int bounty_stake(int h_addr) method_id {
+  (_, _, var balances) = unpack_state();
+;; -----------------------------------------
+  var stake = 0;
+  var (_, bounty) = unpack_balances(balances);
+
+  var (sb, found) = bounty.udict_get?(256, h_addr);
+  if (found){
+    stake = sb~load_uint(32);
+  }
+  return stake;
+}
+
+;; -----------------------------------------
+_ get_settings() method_id {
+;; -----------------------------------------
+  var (_, settings, _) = unpack_state();
+  var (_, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent) = unpack_settings(settings);
+  var wallets = pair(owner_addr.begin_parse(), dest_wallet.begin_parse());
+  return tuple4(token_id, triple(softcup, collected_funds, tokens_sold), wallets, bounty_percent);
+}
+
+;; -----------------------------------------
+_ get_flags() method_id {
+;; -----------------------------------------
+  var (flags, _, _) = unpack_state();
+  var (can_buy, is_finished, date_start, date_end, _) = unpack_flags(flags);
+  return triple(can_buy, is_finished, pair(date_start, date_end));
+}

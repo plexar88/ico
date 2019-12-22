@@ -1,0 +1,67 @@
+Func bug (critical): Silent compilation of vulnerable code.
+A function call containing set_data () from another function, without the impure directive, will be excluded from the resulting asm code without any warnings from the compiler. Moreover, this does not always happen, but only if the value returned by this function is not used in further code, which makes it difficult to detect during testing. This can lead to the compilation of a vulnerable smart contract that does not preserve its state, as the developers expected, due to the function call being removed by the compiler. For example, a smart contract will transfer funds to the desired account, but will not record that the funds have been transferred and it will be possible to make funds transfers up to the emptying of the smart contract balance. Smart contract developers need to “manually” go through all the chains of calls to nested functions and ensure that a pure function does not call an impure function, which does not use a return value, otherwise the compiler will remove its call from resulting code without any notification.
+For example, this code uses the values ​​returned by fn1 and fn2, and the return value of fn3 is not used.
+
+() store_data(data) impure {
+	set_data(data);
+	return ();
+}
+
+int fn1(data){
+	store_data(data);
+	return true;
+}
+
+int fn2(data){
+	store_data(data);
+	return true;
+}
+
+int fn3(data){
+	store_data(data);
+	return true;
+}
+
+() main (){
+	var data = begin_cell().store_uint(0xc0de,32).end_cell();	
+	if (fn1(data) | fn2(data)){
+		data = begin_cell().store_uint(0xc0ffee,32).end_cell();		
+		fn3(data);
+	}
+	return ();
+}
+The compiler compiled the following asm code:
+PROGRAM{
+  DECLPROC store_data
+  DECLPROC fn1
+  DECLPROC fn2
+  DECLPROC fn3
+    store_data PROC:<{
+    c4 POP
+  }>
+  fn1 PROC:<{
+    store_data CALLDICT
+    TRUE
+  }>
+  fn2 PROC:<{
+    store_data CALLDICT
+    TRUE
+  }>
+  fn3 PROC:<{
+    store_data CALLDICT
+    TRUE
+  }>
+  main PROC:<{
+    49374 PUSHINT
+    NEWC
+    32 STU
+    ENDC
+    DUP
+    fn1 CALLDICT
+    SWAP
+    fn2 CALLDICT
+    OR
+    IF:<{   <---------- The fn3 function call has been optimized by the compiler. Data will not be saved as intended by the developer.
+    }>
+  }>
+}END>
