@@ -1,6 +1,8 @@
 ## ICO smart contract
 Simple ICO smart contract for TON network
 
+Detail information about this smart contract read in pdf files.
+
 How to create, setup and upload smart contract to TON network:
 #### 1. Compile lite-client as described [here](https://test.ton.org/README.txt)
 
