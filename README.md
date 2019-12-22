@@ -8,13 +8,13 @@ Using *.fif scripts in folder "fift" do follow:
 
 #### 2. Create wallet call it owner_wallet.
 
-```$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 owner_wallet```
+    $ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 owner_wallet
 
 #### 3.Create second wallet and call it dest_wallet. 
 
-```$ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet```
+    $ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet
   
-Now we need to setup ICO smart contract. We know owner_wallet and dest_wallet addresses. Also we need find out date start and date end of ICO in unixtimestamp format. You can use this [site](https://www.unixtimestamp.com) to do it.
+Now we need to setup ICO smart contract. We know owner_wallet and dest_wallet addresses. Also we need find out date start and date end of ICO in unixtimestamp format. You can use this <https://www.unixtimestamp.com> to do it.
 For example, we want to sell tokens in 4 stages. Each stage have some amount of tokens by some price.
 
 stage | tokens | price 
@@ -51,15 +51,15 @@ Send file ico-query.boc via lite-client to upload smart contract to TON network
     ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/send_bounty.fif kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 12345
 
 Result:
-Create message body to send 12345 bounty stakes to address kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT
+_Create message body to send 12345 bounty stakes to address kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT
 B5EE9C7241010201002C00010AA100003039010043800DB20D7944CBEEBE0A85FB64F664086403063B2B89D9FAC26E8A435C28C2CCC9D07C7DDABF
 (Saved to file send-bounty-msg.boc)
-Use this filename as body message parameter with script wallet.fif
+Use this filename as body message parameter with script wallet.fif_
 
     ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 30 1 -B <this-directory>/fift/send-bounty-msg.boc <this-directory>/fift/send-bounty-query
 
 Result:
-Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
+_Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq-
 Loading private key from file <this-directory>/fift/owner_wallet.pk
 Transferring GR$1. to account kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL = 0:b18524e82c4c49d68b29047ae0b6aafbf055f0664d29a24f2ae579b163aa2531 seqno=0x1e bounce=-1 
@@ -75,7 +75,7 @@ resulting external message: x{88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E87
   x{800DB20D7944CBEEBE0A85FB64F664086403063B2B89D9FAC26E8A435C28C2CCC9D_}
 
 B5EE9C724101030100CB0001CF88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E878E605DC1627A7B28D8027BE60DFE54D0A79258F240F0AB3372E9ED3DC4048D9382FE5E2AA77B261AFD399BAE98060093342E8C4F0AD75AB050BB719CE9B0ED71F541A0CD784D8A63D828000000F01C010172620058C29274162624EB4594823D705B557DF82AF8332694D1279572BCD8B1D51298A1DCD6500000000000000000000000000000A100003039020043800DB20D7944CBEEBE0A85FB64F664086403063B2B89D9FAC26E8A435C28C2CCC9D051ED6A4F
-(Saved to file <this-directory>/fift/send-bounty-query.boc)
+(Saved to file <this-directory>/fift/send-bounty-query.boc)_
 
 Send file send-bounty-query.boc via lite-client to enroll bounty
 
@@ -84,7 +84,7 @@ Send file send-bounty-query.boc via lite-client to enroll bounty
 
 Result:
 
-Transferring GR$1. to account kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL = 0:b18524e82c4c49d68b29047ae0b6aafbf055f0664d29a24f2ae579b163aa2531 seqno=0x1f bounce=-1 
+_Transferring GR$1. to account kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL = 0:b18524e82c4c49d68b29047ae0b6aafbf055f0664d29a24f2ae579b163aa2531 seqno=0x1f bounce=-1 
 Body of transfer message is x{00}
 
 signing message: x{0000001F03}
@@ -94,7 +94,7 @@ resulting external message: x{88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E87
  x{620058C29274162624EB4594823D705B557DF82AF8332694D1279572BCD8B1D51298A1DCD650000000000000000000000000000000}
 
 B5EE9C724101020100A20001CF88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E878E605DC1627A7B28D8037996882272F4E3F35E54FFAE7D5B6D8128F4DFC0F8A880B2A8C7ACD2350DC88136B47DA9A96BF921D543149C3C136EB421D2E9938B3A3498F362EE5AD79DE068000000F81C01006A620058C29274162624EB4594823D705B557DF82AF8332694D1279572BCD8B1D51298A1DCD6500000000000000000000000000000005F8843F5
-(Saved to file  <this-directory>/fift/current-stage-query.boc)
+(Saved to file  <this-directory>/fift/current-stage-query.boc)_
 
 Send file current-stage-query.boc via lite-client to buy tokens by current stage price only.
 
@@ -102,7 +102,7 @@ Send file current-stage-query.boc via lite-client to buy tokens by current stage
 #### 4. Finalize ICO:
     ~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/wallet.fif <this-directory>/fift/owner_wallet kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL 32 1 -B <this-directory>/fift/finalize_ico.boc <this-directory>/fift/finalize-ico-query
 
-Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
+_Source wallet address = 0:4fde1eb0ae74609cc545593f69ff07c23ec34bb4424743c7302ee0b13d3d946c 
 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq-
 Loading private key from file <this-directory>/fift/owner_wallet.pk
 Transferring GR$1. to account kQCxhSToLExJ1ospBHrgtqr78FXwZk0pok8q5XmxY6olMQxL = 0:b18524e82c4c49d68b29047ae0b6aafbf055f0664d29a24f2ae579b163aa2531 seqno=0x20 bounce=-1 
@@ -115,7 +115,7 @@ resulting external message: x{88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E87
  x{620058C29274162624EB4594823D705B557DF82AF8332694D1279572BCD8B1D51298A1DCD6500000000000000000000000000000A3}
 
 B5EE9C724101020100A20001CF88009FBC3D615CE8C1398A8AB27ED3FE0F847D869768848E878E605DC1627A7B28D80011C8E523B3CB73EDE2BE7F19B5284D56B65C4F41C6A6BA40AE69A09D00683E94BBC4CFACD7BC43532F48345762EE8676DF4CD9CD46B139E76CA2814C9ABD9068000001001C01006A620058C29274162624EB4594823D705B557DF82AF8332694D1279572BCD8B1D51298A1DCD6500000000000000000000000000000A367E1D979
-(Saved to file <this-directory>/fift/finalize-ico-query.boc)
+(Saved to file <this-directory>/fift/finalize-ico-query.boc)_
 
 Send file finalize-ico-query.boc via lite-client to finalize ICO.
 
