@@ -14,7 +14,7 @@ Using *.fif scripts in folder "fift" do follow:
 
     $ <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/new-wallet.fif 0 dest_wallet
   
-Now we need to setup ICO smart contract. We know owner_wallet and dest_wallet addresses. Also we need find out date start and date end of ICO in unixtimestamp format. You can use this <https://www.unixtimestamp.com> to do it.
+Now we need to setup ICO smart contract. We know owner_wallet and dest_wallet addresses. Also we need find out date start and date end of ICO in unixtimestamp format. You can use this [site](https://www.unixtimestamp.com) to do it.
 For example, we want to sell tokens in 4 stages. Each stage have some amount of tokens by some price.
 
 stage | tokens | price 
