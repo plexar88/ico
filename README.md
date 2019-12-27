@@ -1,7 +1,7 @@
 ## ICO smart contract
 
 Simple ICO smart contract.
-This smart contract allows you to conduct a fundraising event for the initial coin offer (ICO) for various projects. Implemented such features as softcup, refund, bounty, etc.
+This smart contract allows you to conduct a fundraising event like ICO for various projects. Implemented such features as softcup, refund, bounty, etc.
 More detail information about this smart contract read in pdf files.
 
 How to create, setup and upload smart contract to TON network:
