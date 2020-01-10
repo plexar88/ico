@@ -3,7 +3,7 @@ It would be nice to add:
 - constant support to avoid magic numbers in the code.
 - directive "include" to slightly offload the text of file.
 - simple type redefinition with compiler checking.
-
+- warnings about unused variables.
 
 Misprints:
 tblkch.pdf page 95.
