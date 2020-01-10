@@ -298,7 +298,6 @@ cell do_refund(h_addr, investors) {
   var bought_tokens = 0;
   var tokens_amount = 0;
   var rest_grams = msg_value;
-  var stage_tokens` = stage_tokens;
 
   var break = false; 
   do {                                          ;; buy tokens during stages if need
@@ -311,7 +310,6 @@ cell do_refund(h_addr, investors) {
     stages = update_stage(stages, stage_tokens);
     if ((rest_grams > token_price) & any_stage) { ;; if (rest_grams > 1 * token_price & any_stage)
       (stages, stage_tokens, token_price) = next_stage(stages);
-      stage_tokens` = stage_tokens;
       if ((stage_tokens == 0) & (token_price == 0)){
         can_buy = false;
         flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
