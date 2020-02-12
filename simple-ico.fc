@@ -212,7 +212,7 @@ int get_total_bounty_stakes(bounty){
   throw_if (44, is_finished);
   throw_if (42, now() < date_start);
   (var tokens, _) = get_current_stage(stages);
-  throw_if (47, (now() < date_end) & (tokens > 0));
+  throw_if (47, (now() <= date_end) & (tokens > 0));
   if (now() > date_end) & (collected_funds < softcup){
     can_buy = false;
     is_finished = true;
@@ -323,13 +323,15 @@ cell do_refund(h_addr, investors) {
   var (investors, bounty) = unpack_balances(balances);
   var c_addr = begin_cell().store_slice(s_addr).end_cell();
   if (bought_tokens) {
+    var inv_bought_tokens = bought_tokens;
+    var inv_spend_grams = total_spend_grams;
     var (inv, found) = investors.udict_get?(256, h_addr);
     if (found){  ;; investor already bought this tokens before
-      bought_tokens += inv~load_tokens();
-      total_spend_grams += inv~load_grams();
+      inv_bought_tokens += inv~load_tokens();
+      inv_spend_grams += inv~load_grams();
       c_addr = inv~load_ref();
     } 
-    investors~pack_holder(h_addr, c_addr, bought_tokens, total_spend_grams);
+    investors~pack_holder(h_addr, c_addr, inv_bought_tokens, inv_spend_grams);
     tokens_sold += bought_tokens;
   }
   
