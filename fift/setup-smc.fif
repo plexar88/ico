@@ -1,24 +1,25 @@
 #!/usr/bin/fift -s
 "TonUtil.fif" include
-
+{ .s bye } : `
 { -1 { 1+ 2dup 8 * ufits } until
   rot over 4 u, -rot 8 * u, } : Token,
 
-{ ."usage: " @' $0 type ." <workchain_id> <owner_addr> <dest_wallet> <softcup> <utime_date_start> <utime_date_end> <token_id> <bounty_percent> <stages> " cr
+{ ."usage: " @' $0 type ." <workchain_id> <owner_addr> <dest_wallet> <softcup> <utime_date_start> <utime_date_end> <token_id> <storage_fee> <bounty_percent> <stages> " cr
   ."Creates a request to upload new ICO smart contract and saves it into ico-query.boc file" cr
   ."Example: setup-smc.fif 0 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq- kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 3000000000 1576972800 1579651200 239 3333 500000 1000 500000 1500 500000 2000 500000 2500" cr 1 halt
 } : usage
 
-$# dup 10 < ' usage if
+$# dup 11 < ' usage if
 
 $1 (number) drop constant wc // workchain_id
-$# 7 - dup 2 mod 0= abort"Parameters stages (tokens, price) should be odd value. Ex. 500000 3000 400000 5000 means fist stage 500000 tokens by price 3000 nanogran each"
+$# 7 - dup 2 mod 0<> abort"Parameters stages (tokens, price) should be odd value. Ex. 500000 3000 400000 5000 means fist stage 500000 tokens by price 3000 nanogran each"
 variable idx dup idx !
 variable i 1 i !
 variable dict_stages dictnew dict_stages !
 // fill dict by values
+cr ."Stages: " cr
 {
-<b idx @ dup 1+ -rot $() (number) drop Token, swap $() (number) drop Gram, b> <s // push value
+<b idx @ dup 1+ -rot $() (number) drop dup . ." - " Token, swap $() (number) drop dup . cr Gram, b> <s // push value
 i @ dup 1+ i ! // push key
 dict_stages @ // push dict
 4 // push key size
@@ -26,14 +27,14 @@ udict! // add key val to udict
 drop
 dict_stages !
 idx @ 2+ idx ! // inc loop counter (counter = counter + 2)
-} swap 2 / times
+} swap 1- $# swap - 2 / times
 <b 1 4 u, dict_stages @ dict, b> constant stages
 
 $2 $>smca not abort"Error: bad owner address" drop <b 4 3 u, -rot addr, b> constant owner_addr
 $3 $>smca not abort"Error: bad destination address" drop <b 4 3 u, -rot addr, b> constant dest_wallet
 
 <b 1 1 u, 0 1 u, $5 (number) drop 32 u, $6 (number) drop 32 u, 0 1 u, b> constant flags
-<b stages ref, $7 (number) drop 32 u, owner_addr ref, dest_wallet ref, $4 (number) drop Gram, 0 Gram, 0 Token, $8 (number) drop 32 u, b> constant settings
+<b stages ref, $7 (number) drop 32 u, owner_addr ref, dest_wallet ref, $4 (number) drop Gram, 0 Gram, 0 Token, $9 (number) drop 32 u, $8 (number) drop 32 u, b> constant settings
 <b dictnew dict, dictnew dict, b> constant balances
 <b flags ref, settings ref, balances ref, b> constant data
 
@@ -45,7 +46,11 @@ null constant lib // no libraries
 state_init // dup ."StateInit: " <s csr. cr
 dup hashu wc swap 2dup 2constant wallet_addr
 
-cr cr ."Smart contract address = " 2dup .addr cr
+."Smart contract address = " 2dup .addr cr
+."Bounty percent : " $9 (number) drop . cr 
+."Storage fee : " $8 (number) drop . cr 
+."Currency id : " $7 (number) drop . cr 
+."Softcup : " $4 (number) drop . cr 
 2dup "ico.addr" save-address-verbose
 ."Non-bounceable address (for init): " 2dup 7 .Addr cr
 ."Bounceable address (for later access): " 6 .Addr cr
@@ -54,4 +59,4 @@ cr cr ."Smart contract address = " 2dup .addr cr
 // dup ."External message for initialization is " <s csr. cr
 2 boc+>B // dup Bx. cr
 "ico-query.boc" tuck B>file
-."(Saved ICO smartcontract creating query to file " type .")" cr cr
+."(Saved ICO smartcontract creating query to file " type .")" cr cr 
