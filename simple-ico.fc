@@ -42,15 +42,15 @@ cell pack_flags(can_buy, is_finished, date_start, date_end, is_init){
 }
 
 ;; =========================================
-;; return (stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent * 100)
-(cell, int, cell, cell, int, int, int, int) unpack_settings(cell sets){
+;; return (stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent * 100, storage_fee)
+(cell, int, cell, cell, int, int, int, int, int) unpack_settings(cell sets){
 ;; =========================================
   var s = sets.begin_parse();
-  return (s~load_ref(),s~load_uint(32),s~load_ref(), s~load_ref(), s~load_grams(), s~load_grams(), s~load_tokens(), s~load_uint(32));
+  return (s~load_ref(),s~load_uint(32),s~load_ref(), s~load_ref(), s~load_grams(), s~load_grams(), s~load_tokens(), s~load_uint(32), s~load_uint(32));
 }
 
 ;; =========================================
-cell pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent){
+cell pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent, storage_fee){
 ;; =========================================
   return begin_cell()
     .store_ref(stages)
@@ -61,6 +61,7 @@ cell pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected
     .store_grams(collected_funds)
     .store_tokens(tokens_sold)
     .store_uint(bounty_percent,32) ;; we store baunty percent as percent * 100. So, if we need set bounty percent as 33.33% of sold tokens we need to set 3333 as bounty_percent parameter.
+    .store_uint(storage_fee,32)
   .end_cell();
 }
 
@@ -207,7 +208,7 @@ int get_total_bounty_stakes(bounty){
 () finalize_ico(s_addr) impure {
 ;; =========================================
   var (flags, settings, balances) = unpack_state();
-  var (stages, token_id, _, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent) = unpack_settings(settings);
+  var (stages, token_id, _, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent, _) = unpack_settings(settings);
   var (can_buy, is_finished, date_start, date_end, is_init) = unpack_flags(flags);
   throw_if (44, is_finished);
   throw_if (42, now() < date_start);
@@ -276,7 +277,9 @@ cell do_refund(h_addr, investors) {
   var (flags, settings, balances) = unpack_state();
   var (can_buy, is_finished, date_start, date_end, is_init) = unpack_flags(flags);
   throw_if(42, now() < date_start);
-  var (stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent) = unpack_settings(settings);
+  var (stages, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent, storage_fee) = unpack_settings(settings);
+  throw_if(48, msg_value <= storage_fee);
+
   var h_addr = s_addr.slice_hash();
   if ((now() > date_end) & (collected_funds < softcup)){
     var (investors, bounty) = unpack_balances(balances);
@@ -284,7 +287,6 @@ cell do_refund(h_addr, investors) {
     balances = pack_balances(investors, bounty);
     if (can_buy){
       can_buy = false;
-      is_finished = true;
       flags = pack_flags(can_buy, is_finished, date_start, date_end, is_init);
     }
     pack_state(flags, settings, balances);
@@ -292,12 +294,16 @@ cell do_refund(h_addr, investors) {
   }
   throw_unless(41, can_buy);
   var (stage_tokens, token_price) = get_current_stage(stages);
-  throw_if(43, msg_value < token_price);
+  var (investors, bounty) = unpack_balances(balances);
+  var (_, _found) = investors.udict_get?(256, h_addr);
+  var value = msg_value;
+  ifnot (_found) { value -= storage_fee; };
+  throw_if(43, value < token_price);
   var spend_grams = 0;
   var total_spend_grams = 0;
   var bought_tokens = 0;
   var tokens_amount = 0;
-  var rest_grams = msg_value;
+  var rest_grams = value;
 
   var break = false; 
   do {                                          ;; buy tokens during stages if need
@@ -320,7 +326,6 @@ cell do_refund(h_addr, investors) {
     }
   } until ( break ); 
 
-  var (investors, bounty) = unpack_balances(balances);
   var c_addr = begin_cell().store_slice(s_addr).end_cell();
   if (bought_tokens) {
     var inv_bought_tokens = bought_tokens;
@@ -335,7 +340,7 @@ cell do_refund(h_addr, investors) {
     tokens_sold += bought_tokens;
   }
   
-  settings = pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected_funds + total_spend_grams, tokens_sold, bounty_percent);
+  settings = pack_settings(stages, token_id, owner_addr, dest_wallet, softcup, collected_funds + total_spend_grams, tokens_sold, bounty_percent, storage_fee);
   balances = pack_balances(investors, bounty);
   pack_state(flags, settings, balances); 
   if (rest_grams) {
@@ -372,7 +377,7 @@ cell do_refund(h_addr, investors) {
 ;; =========================================
     var (src_wc, src_addr) = parse_std_addr(s_addr);
     var (ow_wc, ow_addr) = parse_std_addr(owner_addr.begin_parse());
-    throw_if(44, (ow_wc != src_wc) | (ow_addr != src_addr) );
+    throw_if(46, (ow_wc != src_wc) | (ow_addr != src_addr) );
     return ();
 }
 
@@ -399,7 +404,7 @@ cell do_refund(h_addr, investors) {
   }
 
   var (_, var settings, _) = unpack_state();
-  (_, _, var owner_addr,_,_,_,_,_) = unpack_settings(settings);
+  (_, _, var owner_addr,_,_,_,_,_,_) = unpack_settings(settings);
 
   if (op == 0xA1) {
     check_owner(s_addr, owner_addr);
@@ -443,7 +448,7 @@ cell do_refund(h_addr, investors) {
 tuple current_stage() method_id {
 ;; -----------------------------------------
   (_, var settings, _) = unpack_state();
-  (var stages,_,_,_,_,_,_,_) = unpack_settings(settings);
+  (var stages,_,_,_,_,_,_,_,_) = unpack_settings(settings);
   var (stage_tokens, token_price) = get_current_stage(stages);
   return pair(stage_tokens, token_price);
 }
@@ -503,9 +508,17 @@ int bounty_stake(int h_addr) method_id {
 _ get_settings() method_id {
 ;; -----------------------------------------
   var (_, settings, _) = unpack_state();
-  var (_, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent) = unpack_settings(settings);
+  var (_, token_id, owner_addr, dest_wallet, softcup, collected_funds, tokens_sold, bounty_percent, _) = unpack_settings(settings);
   var wallets = pair(owner_addr.begin_parse(), dest_wallet.begin_parse());
   return tuple4(token_id, triple(softcup, collected_funds, tokens_sold), wallets, bounty_percent);
+}
+
+;; -----------------------------------------
+int get_storage_fee() method_id {
+;; -----------------------------------------
+  var (_, settings, _) = unpack_state();
+  var (_, _, _, _, _, _, _, _, storage_fee) = unpack_settings(settings);
+  return storage_fee;
 }
 
 ;; -----------------------------------------
@@ -514,4 +527,4 @@ _ get_flags() method_id {
   var (flags, _, _) = unpack_state();
   var (can_buy, is_finished, date_start, date_end, _) = unpack_flags(flags);
   return triple(can_buy, is_finished, pair(date_start, date_end));
-}
+} 
