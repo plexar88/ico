@@ -21,9 +21,9 @@ stage | tokens | price
   2   | 500000 | 1500 
   3   | 500000 | 2000 
   4   | 500000 | 2500
-Next settings: softcup is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, bounty percent - 11,34% of sold tokens.
+Next settings: softcup is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, storage fee - 123000, bounty percent - 11,34% of sold tokens.
 Let's setup ICO smart contract. Run in console follow command, replaced directories to your one.
-<build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
+<build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 123000 1134 500000 1000 500000 1500 500000 2000 500000 2500
 Pay attention, that stage info is last parameters and going after bounty percent which is multiplied by a hundred (1134).
 This action will show smart contract addresses and will produce .boc file. Send 1 gram to init address of smart contract, then upload .boc file with lite-client (sendfile command).
 
@@ -32,7 +32,7 @@ You can send bounty stake to some wallet. Smart contract controlled from owner w
 
 Command examples:
 1. Setup ICO smart contract
-~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/setup-smc.fif 0 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq- kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 3000000000 1577021088 1577021988 239 1134 500000 1000 500000 1500 500000 2000 500000 2500
+~/full-node/crypto/fift -I ~/full-node-src/crypto/fift/lib -L Asm.fif -s <this-directory>/fift/setup-smc.fif 0 kQBP3h6wrnRgnMVFWT9p_wfCPsNLtEJHQ8cwLuCxPT2UbDq- kQBtkGvKJl918FQv2yezIEMgGDHZXE7P1hN0UhrhRhZmTuLT 3000000000 1577021088 1577021988 239 1134 123000 500000 1000 500000 1500 500000 2000 500000 2500
 
 Result:
 Smart contract address = 0:b18524e82c4c49d68b29047ae0b6aafbf055f0664d29a24f2ae579b163aa2531 
