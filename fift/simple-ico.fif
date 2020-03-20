@@ -29,6 +29,7 @@ PROGRAM{
   112966 DECLMETHOD balance_of
   122678 DECLMETHOD bounty_stake
   108850 DECLMETHOD get_settings
+  92672 DECLMETHOD get_storage_fee
   118291 DECLMETHOD get_flags
   unpack_flags PROC:<{
     CTOS
@@ -60,17 +61,18 @@ PROGRAM{
     LDGRAMS
     LDVARINT16
     32 LDU
+    32 LDU
     DROP
   }>
   pack_settings PROC:<{
     NEWC
-    s1 s8 XCHG
+    s1 s9 XCHG
     STREF
-    s1 s6 XCHG
+    s1 s7 XCHG
     32 STU
-    s1 s4 XCHG
+    s1 s5 XCHG
     STREF
-    s1 s2 XCHG
+    s1 s3 XCHG
     STREF
     SWAP
     STGRAMS
@@ -78,6 +80,7 @@ PROGRAM{
     STGRAMS
     SWAP
     STVARINT16
+    32 STU
     32 STU
     ENDC
   }>
@@ -269,6 +272,7 @@ PROGRAM{
     unpack_state INLINECALLDICT
     OVER
     unpack_settings CALLDICT
+    DROP
     s5 POP
     s0 s9 XCHG
     unpack_flags CALLDICT
@@ -283,7 +287,7 @@ PROGRAM{
     DROP
     NOW
     s10 PUSH
-    LESS
+    LEQ
     SWAP
     0 GTINT
     AND
@@ -446,83 +450,100 @@ PROGRAM{
     s6 PUSH
     unpack_settings CALLDICT
     18 s() PUSH
+    OVER
+    LEQ
+    48 THROWIF
+    19 s() PUSH
     HASHSU
     NOW
-    s11 PUSH
+    s12 PUSH
     GREATER
-    s4 s5 PUSH2
+    s5 s6 PUSH2
     LESS
     AND
     IFJMP:<{
-      s0 s8 XCHG
-      8 BLKDROP
-      s4 POP
-      s8 POP
-      s8 POP
-      s8 POP
-      s0 s2 XCHG
+      s0 s9 XCHG
+      9 BLKDROP
+      s9 POP
+      s9 POP
+      s9 POP
+      s0 s3 XCHG
       unpack_balances CALLDICT
-      s3 s3 XCHG2
+      s7 s7 XCHG2
       do_refund CALLDICT
-      ROT
+      s0 s6 XCHG2
       pack_balances CALLDICT
       SWAP
       IF:<{
-        s2 POP
+        s3 POP
         FALSE
-        s0 s3 XCHG
-        TRUE
-        s6 s5 s3 XCHG3
+        s0 s4 XCHG
+        s1 s6 s3 XCHG3
         s0 s5 XCHG
         pack_flags CALLDICT
       }>ELSE<{
-        s3 s5 s4 XCHG3
-        3 BLKDROP
+        s6 s1 s5 XCHG3
+        s3 s4 XCHG
+        4 BLKDROP
       }>
       -ROT
       pack_state INLINECALLDICT
     }>
-    s15 POP
-    s0 s12 XCHG
+    16 s() POP
+    s0 s13 XCHG
     41 THROWIFNOT
-    s6 PUSH
+    s7 PUSH
     get_current_stage CALLDICT
-    18 s() PUSH
-    OVER
+    s0 s15 XCHG
+    unpack_balances CALLDICT
+    17 s() PUSH
+    s2 PUSH
+    8 PUSHPOW2
+    DICTUGET
+    NULLSWAPIFNOT
+    NIP
+    IFNOT:<{
+      s0 20 s() XCHG
+      s15 PUSH
+      SUB
+    }>ELSE<{
+      s0 20 s() XCHG
+    }>
+    DUP
+    17 s() PUSH
     LESS
     43 THROWIF
     0 PUSHINT
     DUP
     FALSE
     UNTIL:<{
-      21 s() PUSH
-      s4 PUSH
+      s3 PUSH
+      20 s() PUSH
       DIV
-      s5 PUSH
+      s6 PUSH
       MIN
-      s5 s5 XCPU
+      s6 s6 XCPU
       SUB
-      s2 s5 XCPU
+      s2 s6 XCPU
       ADD
-      s5 s4 XCPU
+      s0 s6 XCHG
+      20 s() PUSH
       MUL
-      s0 22 s() XCHG
-      22 s() PUSH
+      s4 s4 XCPU
       SUB
-      s1 s3 XCHG
-      s0 22 s() XCHG
+      s3 s4 XCHG2
       ADD
-      s11 s1 XCPU
+      s13 s1 XCPU
       update_stage CALLDICT
-      21 s() PUSH
-      s4 PUSH
+      s3 PUSH
+      20 s() PUSH
       GREATER
-      21 s() PUSH
+      23 s() PUSH
       AND
       IF:<{
         NIP
-        s2 POP
-        SWAP
+        18 s() POP
+        s0 17 s() XCHG
         next_stage CALLDICT
         OVER
         0 EQINT
@@ -530,84 +551,88 @@ PROGRAM{
         0 EQINT
         AND
         IF:<{
-          s3 POP
-          18 s() POP
+          19 s() POP
+          20 s() POP
           FALSE
-          s14 s13 s12 PUSH3
-          s14 PUSH
+          16 s() PUSH
+          16 s() PUSH
+          16 s() PUSH
+          16 s() PUSH
           pack_flags CALLDICT
           TRUE
         }>ELSE<{
-          s1 19 s() XCHG
-          s0 s3 XCHG
+          s1 21 s() XCHG
+          s0 19 s() XCHG
         }>
       }>ELSE<{
         s2 POP
-        s0 18 s() XCHG
+        s0 20 s() XCHG
         TRUE
       }>
-      s1 19 s() XCHG
-      s11 s4 s0 XCHG3
+      s1 21 s() XCHG
+      s13 s5 s0 XCHG3
       DUP
     }>
     DROP
-    s2 POP
-    s2 POP
-    s9 POP
-    s9 POP
-    s9 POP
-    s9 POP
+    s4 POP
+    s12 POP
+    s12 POP
+    s12 POP
+    s12 POP
     s13 POP
-    s0 s9 XCHG
-    unpack_balances CALLDICT
+    s15 POP
     NEWC
-    16 s() PUSH
+    17 s() PUSH
     STSLICER
     ENDC
-    s6 PUSH
+    s10 PUSH
     IF:<{
-      s12 s2 PUSH2
+      s10 s7 PUSH2
+      s15 s11 PUSH2
       8 PUSHPOW2
       DICTUGET
       NULLSWAPIFNOT
       IF:<{
-        NIP
+        s3 POP
+        s0 s2 XCHG
         LDVARINT16
-        s7 s7 XCHG2
+        -ROT
         ADD
-        s0 s6 XCHG
+        SWAP
         LDGRAMS
-        s8 s8 XCHG2
+        s3 s3 XCHG2
         ADD
-        s0 s7 XCHG
+        s0 s2 XCHG
         LDREF
         DROP
       }>ELSE<{
+        s1 s3 XCHG
         DROP
       }>
-      s12 s0 s6 XC2PU
-      s8 PUSH
+      s4 s11 XCHG
+      s3 s15 XCHG
+      s0 s2 XCHG
       ~pack_holder CALLDICT
-      s6 s4 XCHG2
+      s13 s8 XCHG2
       ADD
     }>ELSE<{
-      s1 s12 XCHG
-      s3 s8 XCHG
-      s2 s6 XCHG
+      s3 s15 XCHG
+      s1 s13 XCHG
+      s9 s10 XCHG
+      s2 s9 XCHG
       3 BLKDROP
     }>
-    s6 s4 XCHG2
+    s10 s4 XCHG2
     ADD
-    s1 s7 XCHG
-    s5 s6 XCHG
-    s4 s5 XCHG
-    s1 s4 XCHG
-    s3 s10 XCHG
-    s0 s10 s10 XCHG3
+    s8 s7 s0 XCHG3
+    s6 s9 XCHG
+    s5 s11 XCHG
+    s4 s11 XCHG
+    3 -ROLL
     pack_settings CALLDICT
-    s3 s3 XCHG2
+    s0 s4 XCHG
     pack_balances CALLDICT
-    s1 s2 XCHG
+    s1 s3 s0 XCHG3
     pack_state INLINECALLDICT
     DUP
     IF:<{
@@ -671,7 +696,7 @@ PROGRAM{
     s0 s2 XCHG
     NEQ
     OR
-    44 THROWIF
+    46 THROWIF
   }>
   recv_internal PROC:<{
     SWAP
@@ -708,8 +733,8 @@ PROGRAM{
     DROP
     NIP
     unpack_settings CALLDICT
-    s5 s7 XCHG
-    7 BLKDROP
+    s6 s8 XCHG
+    8 BLKDROP
     OVER
     161 PUSHINT
     EQUAL
@@ -761,7 +786,7 @@ PROGRAM{
     DROP
     NIP
     unpack_settings CALLDICT
-    7 BLKDROP
+    8 BLKDROP
     get_current_stage CALLDICT
     PAIR
   }>
@@ -829,6 +854,7 @@ PROGRAM{
     DROP
     NIP
     unpack_settings CALLDICT
+    DROP
     s7 POP
     s0 s4 XCHG
     CTOS
@@ -841,6 +867,14 @@ PROGRAM{
     s0 s1 s3 XCHG3
     4 TUPLE
   }>
+  get_storage_fee PROC:<{
+    unpack_state INLINECALLDICT
+    DROP
+    NIP
+    unpack_settings CALLDICT
+    s0 s8 XCHG
+    8 BLKDROP
+  }>
   get_flags PROC:<{
     unpack_state INLINECALLDICT
     2DROP
@@ -849,4 +883,4 @@ PROGRAM{
     PAIR
     TRIPLE
   }>
-}END>c
+}END>c 
