@@ -1,7 +1,7 @@
 ## ICO smart contract
 
 Simple ICO smart contract.
-This smart contract allows you to conduct a fundraising event like ICO for various projects. Implemented such features as softcup, refund, bounty, etc.
+This smart contract allows you to conduct a fundraising event like ICO for various projects. Implemented such features as soft cap, refund, bounty, etc.
 More detail information about this smart contract read in pdf files.
 
 How to create, setup and upload smart contract to TON network:
@@ -27,7 +27,7 @@ stage | tokens | price
   3   | 500000 | 2000 
   4   | 500000 | 2500
 
-Next settings: softcup is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, storage fee - 123000, bounty percent - 11,34% of sold tokens.
+Next settings: soft cap is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, storage fee - 123000, bounty percent - 11,34% of sold tokens.
 
 Let's setup ICO smart contract. 
 Run in console follow command, replaced directories to your one.
