@@ -21,7 +21,7 @@ stage | tokens | price
   2   | 500000 | 1500 
   3   | 500000 | 2000 
   4   | 500000 | 2500
-Next settings: softcup is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, storage fee - 123000, bounty percent - 11,34% of sold tokens.
+Next settings: soft cap is 3000000000, date start - 1576972800, date end - 1579651200, Currency id - 239, storage fee - 123000, bounty percent - 11,34% of sold tokens.
 Let's setup ICO smart contract. Run in console follow command, replaced directories to your one.
 <build-directory>/crypto/fift -I<source-directory>/crypto/fift/lib -s <this-directory>/fift/setup-smc.fif 0 <owner_wallet> <dest_wallet> 3000000000 1576972800 1579651200 239 123000 1134 500000 1000 500000 1500 500000 2000 500000 2500
 Pay attention, that stage info is last parameters and going after bounty percent which is multiplied by a hundred (1134).
