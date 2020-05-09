@@ -1,7 +1,6 @@
 ;; ===========================
 ;; Simple ICO smart contract
-;; author : Suprun Vladimir
-;; email  : plexar88@gmail.com
+;; https://toketon.com
 ;; ===========================
 
 ;; Add this line "x{FA06} @Defop STVARUINT32" to Asm.fif after line "x{FA03} @Defop STVARINT16"
